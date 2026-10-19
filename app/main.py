@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pymongo.errors import PyMongoError
 from app.api.v1.router import api_v1_router
 from app.core.config import settings
 from app.core.exceptions import AppException
@@ -90,6 +91,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(PyMongoError)
+async def pymongo_exception_handler(request: Request, exc: PyMongoError) -> JSONResponse:
+    logger.error(f"Database operation failed: {exc}", exc_info=True)
+    error_payload = ErrorResponse(
+        success=False,
+        message="Database service is temporarily unavailable. If connecting to MongoDB Atlas, ensure '0.0.0.0/0' is added to Atlas Network Access IP whitelist.",
+        error=ErrorDetails(code="DATABASE_UNAVAILABLE", details=[str(exc)]),
+    )
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content=error_payload.model_dump(),
+    )
+
+
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.error(f"Unhandled server error: {exc}", exc_info=True)
@@ -152,9 +167,13 @@ async def liveness_check() -> Dict[str, str]:
 async def readiness_check() -> JSONResponse:
     is_mongo_alive = await mongo_manager.ping()
     if is_mongo_alive or settings.USE_MOCK_DB:
+        db_label = "mock_fallback" if mongo_manager.is_fallback_mock else "connected"
+        payload = {"status": "ready", "database": db_label}
+        if mongo_manager.is_fallback_mock:
+            payload["note"] = "Operating in in-memory fallback. Live MongoDB connection was unavailable."
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"status": "ready", "database": "connected"},
+            content=payload,
         )
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

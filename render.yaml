@@ -24,6 +24,8 @@ services:
         value: kirna_kart
       - key: USE_MOCK_DB
         value: "false"
+      - key: MONGODB_AUTO_FALLBACK_MOCK
+        value: "true"
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: JWT_ALGORITHM

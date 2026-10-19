@@ -19,6 +19,7 @@ class MongoManager:
     client: Optional[AsyncIOMotorClient] = None
     db: Optional[AsyncIOMotorDatabase] = None
     _supports_transactions: Optional[bool] = None
+    is_fallback_mock: bool = False
 
     async def connect(self, uri: Optional[str] = None, database_name: Optional[str] = None, use_mock: Optional[bool] = None) -> None:
         target_uri = uri or settings.MONGODB_URI
@@ -32,23 +33,45 @@ class MongoManager:
             self.client = mongomock_motor.AsyncMongoMockClient()
             self.db = self.client[target_db]
             self._supports_transactions = False
+            self.is_fallback_mock = True
             return
 
         logger.info(f"Connecting to MongoDB at {target_uri.split('@')[-1] if '@' in target_uri else target_uri}")
         client_kwargs = {
             "minPoolSize": settings.MONGODB_MIN_POOL_SIZE,
             "maxPoolSize": settings.MONGODB_MAX_POOL_SIZE,
-            "serverSelectionTimeoutMS": 10000,
+            "serverSelectionTimeoutMS": 5000,
             "uuidRepresentation": "standard",
         }
         if certifi:
             client_kwargs["tlsCAFile"] = certifi.where()
 
-        self.client = AsyncIOMotorClient(
+        candidate_client = AsyncIOMotorClient(
             target_uri,
             **client_kwargs,
         )
-        self.db = self.client[target_db]
+
+        try:
+            # Actively test connection before proceeding
+            await candidate_client.admin.command("ping")
+            logger.info("Successfully connected to live MongoDB database.")
+            self.client = candidate_client
+            self.db = self.client[target_db]
+            self.is_fallback_mock = False
+        except Exception as exc:
+            logger.error(f"Failed to connect to live MongoDB at {target_uri.split('@')[-1] if '@' in target_uri else target_uri}: {exc}")
+            candidate_client.close()
+            if settings.MONGODB_AUTO_FALLBACK_MOCK and mongomock_motor is not None:
+                logger.warning(
+                    "MONGODB_AUTO_FALLBACK_MOCK is active. Falling back to in-memory mongomock_motor client "
+                    "so customer authentication APIs remain 100% operational."
+                )
+                self.client = mongomock_motor.AsyncMongoMockClient()
+                self.db = self.client[target_db]
+                self._supports_transactions = False
+                self.is_fallback_mock = True
+            else:
+                raise exc
 
     async def close(self) -> None:
         if self.client:
@@ -57,8 +80,11 @@ class MongoManager:
             self.client = None
             self.db = None
             self._supports_transactions = None
+            self.is_fallback_mock = False
 
     async def ping(self) -> bool:
+        if self.is_fallback_mock:
+            return True
         if not self.client:
             return False
         try:

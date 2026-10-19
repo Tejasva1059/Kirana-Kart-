@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     MONGODB_MIN_POOL_SIZE: int = 10
     MONGODB_MAX_POOL_SIZE: int = 100
     USE_MOCK_DB: bool = False
+    MONGODB_AUTO_FALLBACK_MOCK: bool = True
 
     # Security & Tokens
     JWT_SECRET_KEY: str = Field(
