@@ -12,6 +12,24 @@ from app.services.customer_service import CustomerService
 router = APIRouter(prefix="/customers", tags=["Customer Profile"])
 
 
+@router.get(
+    "/me",
+    response_model=ApiResponse[Dict[str, CustomerPublicProfile]],
+    status_code=status.HTTP_200_OK,
+    summary="Get authenticated customer profile",
+    description="Returns the profile information of the currently authenticated customer.",
+)
+async def get_my_profile(
+    current_customer: Dict[str, Any] = Depends(get_current_customer),
+) -> ApiResponse[Dict[str, CustomerPublicProfile]]:
+    profile = CustomerService.map_to_public_profile(current_customer)
+    return ApiResponse[Dict[str, CustomerPublicProfile]](
+        success=True,
+        message="Customer profile fetched successfully.",
+        data={"customer": profile},
+    )
+
+
 @router.patch(
     "/me",
     response_model=ApiResponse[Dict[str, CustomerPublicProfile]],
