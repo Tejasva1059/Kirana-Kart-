@@ -12,14 +12,14 @@ class Settings(BaseSettings):
     )
 
     # Application
-    APP_NAME: str = "Kirna Kart Authentication API"
+    APP_NAME: str = "Kirana Kart Authentication API"
     APP_ENV: str = "development"
     DEBUG: bool = False
     API_V1_PREFIX: str = "/api/v1"
 
     # MongoDB
     MONGODB_URI: str = "mongodb://localhost:27017"
-    MONGODB_DATABASE: str = "kirna_kart"
+    MONGODB_DATABASE: str = "kirana_kart"
     MONGODB_MIN_POOL_SIZE: int = 10
     MONGODB_MAX_POOL_SIZE: int = 100
     USE_MOCK_DB: bool = False
@@ -27,12 +27,12 @@ class Settings(BaseSettings):
 
     # Security & Tokens
     JWT_SECRET_KEY: str = Field(
-        default="kirna-kart-dev-insecure-jwt-secret-key-32chars-min-len",
+        default="kirana-kart-dev-insecure-jwt-secret-key-32chars-min-len",
         description="Cryptographic secret key for signing JWTs",
     )
     JWT_ALGORITHM: str = "HS256"
-    JWT_ISSUER: str = "kirna-kart-api"
-    JWT_AUDIENCE: str = "kirna-kart-clients"
+    JWT_ISSUER: str = "kirana-kart-api"
+    JWT_AUDIENCE: str = "kirana-kart-clients"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     OTP_RESEND_COOLDOWN_SECONDS: int = 30
     OTP_MAX_ATTEMPTS: int = 5
     OTP_HMAC_SECRET: str = Field(
-        default="kirna-kart-dev-insecure-otp-hmac-secret-key-32chars",
+        default="kirana-kart-dev-insecure-otp-hmac-secret-key-32chars",
         description="Keyed HMAC secret for OTP hashes",
     )
     VERIFICATION_TICKET_EXPIRE_SECONDS: int = 300
@@ -86,7 +86,10 @@ class Settings(BaseSettings):
         """Validate critical security configurations when running in production."""
         if self.APP_ENV.lower() == "production":
             insecure_defaults = [
+                "kirana-kart-dev-insecure-jwt-secret-key-32chars-min-len",
                 "kirna-kart-dev-insecure-jwt-secret-key-32chars-min-len",
+                "kirana-kart-dev-insecure-otp-hmac-secret-key-32chars",
+                "kirna-kart-dev-insecure-otp-hmac-secret-key-32chars",
                 "replace-with-a-secure-random-secret",
                 "replace-with-a-separate-secure-random-secret",
             ]

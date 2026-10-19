@@ -58,7 +58,7 @@ class SensitiveRedactionFormatter(logging.Formatter):
 
 
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
-    logger = logging.getLogger("kirna_kart")
+    logger = logging.getLogger("kirana_kart")
     logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
     # Remove existing handlers to avoid duplicates

@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "c1f7a421-2e11-4777-a89e-2f9b870c918e",
-    "name": "Kirna Kart - Customer Authentication API (v1)",
-    "description": "Production-grade, security-hardened Customer Authentication and Profile APIs for Kirna Kart.\nFeatures separate automated flows for Signup and Login with OTP verification tickets.",
+    "name": "Kirana Kart - Customer Authentication API (v1)",
+    "description": "Production-grade, security-hardened Customer Authentication and Profile APIs for Kirana Kart.\nFeatures separate automated flows for Signup and Login with OTP verification tickets.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

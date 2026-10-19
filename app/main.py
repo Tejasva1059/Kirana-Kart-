@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
-    description="Production-ready customer authentication and profile management module for Kirna Kart.",
+    description="Production-ready customer authentication and profile management module for Kirana Kart.",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",

@@ -60,7 +60,7 @@ class Fast2SMSProvider(BaseSMSProvider):
             logger.error("Fast2SMS API key is not configured.")
             return False
 
-        message = f"Your Kirna Kart verification code is {otp} for {purpose}. Valid for 5 minutes. Do not share this with anyone."
+        message = f"Your Kirana Kart verification code is {otp} for {purpose}. Valid for 5 minutes. Do not share this with anyone."
         payload = {
             "route": "q",
             "message": message,
@@ -106,7 +106,7 @@ class TwilioSMSProvider(BaseSMSProvider):
 
         # Prepend +91 if Indian 10 digits
         to_number = f"+91{mobile_number}" if not mobile_number.startswith("+") else mobile_number
-        message = f"Your Kirna Kart OTP is {otp} for {purpose}. Valid for 5 minutes."
+        message = f"Your Kirana Kart OTP is {otp} for {purpose}. Valid for 5 minutes."
 
         url = f"https://api.twilio.com/2010-04-01/Accounts/{self.account_sid}/Messages.json"
         data = {

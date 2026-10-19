@@ -5,17 +5,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kirna_kart_auth_api
+    container_name: kirana_kart_auth_api
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - APP_NAME=Kirna Kart Authentication API
+      - APP_NAME=Kirana Kart Authentication API
       - APP_ENV=production
       - DEBUG=false
       - API_V1_PREFIX=/api/v1
       - MONGODB_URI=mongodb://mongo:27017
-      - MONGODB_DATABASE=kirna_kart
+      - MONGODB_DATABASE=kirana_kart
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET_KEY=94b7e8d254b38fa160c946f0d9a65cf27d2c3821a78e47bf01b8e19572c842ea
       - OTP_HMAC_SECRET=b65fd328c8942b10a26ebc8c9fae8b15d023b1853974f1d6b087e56230f28a9c
@@ -30,7 +30,7 @@ services:
 
   mongo:
     image: mongo:7.0
-    container_name: kirna_kart_mongodb
+    container_name: kirana_kart_mongodb
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -44,7 +44,7 @@ services:
 
   redis:
     image: redis:7.2-alpine
-    container_name: kirna_kart_redis
+    container_name: kirana_kart_redis
     restart: unless-stopped
     ports:
       - "6379:6379"

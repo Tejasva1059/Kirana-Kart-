@@ -28,7 +28,7 @@ async def init_test_db():
     settings.DEBUG = True
 
     # Connect to in-memory mongomock_motor
-    await mongo_manager.connect(use_mock=True, database_name="kirna_kart_test")
+    await mongo_manager.connect(use_mock=True, database_name="kirana_kart_test")
     await create_indexes()
 
     # Clear all collections
