@@ -82,7 +82,11 @@ class OTPService:
         )
 
         # 5. Generate secure 6-digit OTP and opaque challenge ID
-        otp = generate_numeric_otp(6)
+        if settings.SMS_PROVIDER == "mock":
+            otp = settings.DEV_DEFAULT_OTP or "123456"
+        else:
+            otp = generate_numeric_otp(6)
+
         challenge_id = generate_opaque_token(24)
         otp_hmac = compute_otp_hmac(
             mobile=normalized_mobile,
@@ -119,10 +123,12 @@ class OTPService:
                 code="SMS_DELIVERY_FAILED",
             )
 
+        mock_otp_val = otp if settings.SMS_PROVIDER == "mock" else None
         return OTPRequestData(
             challengeId=challenge_id,
             expiresIn=settings.OTP_EXPIRE_SECONDS,
             resendAfter=settings.OTP_RESEND_COOLDOWN_SECONDS,
+            mockOtp=mock_otp_val,
         )
 
     @staticmethod

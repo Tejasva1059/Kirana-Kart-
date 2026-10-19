@@ -40,9 +40,10 @@ async def request_otp(payload: OTPRequest, request: Request) -> ApiResponse[OTPR
         purpose=payload.purpose,
         client_ip=client_ip,
     )
+    msg = f"OTP sent successfully. [Testing Mode OTP: {data.mockOtp}]" if data.mockOtp else "If eligible, an OTP has been sent."
     return ApiResponse[OTPRequestData](
         success=True,
-        message="If eligible, an OTP has been sent.",
+        message=msg,
         data=data,
     )
 

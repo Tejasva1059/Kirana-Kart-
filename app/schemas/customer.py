@@ -16,7 +16,15 @@ class CustomerPublicProfile(BaseModel):
 
 
 class CustomerProfileUpdateRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "fullName": "Tejas Sharma",
+                "email": "tejas@example.com",
+            }
+        },
+    )
 
     fullName: Optional[str] = Field(None, min_length=2, max_length=100)
     email: Optional[str] = None

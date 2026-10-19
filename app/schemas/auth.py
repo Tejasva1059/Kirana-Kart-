@@ -4,7 +4,15 @@ from app.schemas.customer import CustomerPublicProfile
 
 
 class OTPRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "mobileNumber": "9876543210",
+                "purpose": "signup",
+            }
+        },
+    )
 
     mobileNumber: str = Field(..., description="10-digit Indian mobile number")
     purpose: Literal["signup", "login"] = Field(..., description="Purpose of the OTP request")
@@ -14,13 +22,24 @@ class OTPRequestData(BaseModel):
     challengeId: str
     expiresIn: int
     resendAfter: int
+    mockOtp: Optional[str] = Field(None, description="Mock test OTP (e.g. 123456) provided in testing mode")
 
 
 class OTPVerifyRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "mobileNumber": "9876543210",
+                "otp": "123456",
+                "purpose": "signup",
+                "challengeId": "paste-challengeId-from-request-otp",
+            }
+        },
+    )
 
     mobileNumber: str = Field(..., description="10-digit Indian mobile number")
-    otp: str = Field(..., min_length=6, max_length=6, description="6-digit numeric OTP")
+    otp: str = Field("123456", min_length=6, max_length=6, description="6-digit numeric OTP (default test OTP: 123456)")
     purpose: Literal["signup", "login"] = Field(..., description="Purpose of the verification")
     challengeId: str = Field(..., description="Challenge ID received from OTP request")
 
@@ -39,7 +58,18 @@ class OTPVerifyData(BaseModel):
 
 
 class CustomerSignupRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "fullName": "Tejas Sharma",
+                "email": "tejas@example.com",
+                "mobileNumber": "9876543210",
+                "verificationToken": "paste-verificationToken-from-verify-otp",
+                "acceptedTerms": True,
+            }
+        },
+    )
 
     fullName: str = Field(..., min_length=2, max_length=100, description="Customer's full name")
     email: Optional[str] = Field(None, description="Customer's optional email address")
@@ -64,7 +94,15 @@ class CustomerSignupRequest(BaseModel):
 
 
 class CustomerLoginRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "mobileNumber": "9876543210",
+                "verificationToken": "paste-verificationToken-from-verify-otp",
+            }
+        },
+    )
 
     mobileNumber: str = Field(..., description="10-digit Indian mobile number")
     verificationToken: str = Field(..., description="Opaque one-time verification ticket with login purpose")
