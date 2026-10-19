@@ -193,10 +193,10 @@ class OTPService:
             expected_hmac=challenge["otpHmac"],
         )
 
-        # In non-production development with mock SMS provider, also accept DEV_DEFAULT_OTP (e.g. '123456')
+        # In development or testing with mock SMS provider, also accept DEV_DEFAULT_OTP (e.g. '123456')
         if (
             not is_valid
-            and settings.APP_ENV == "development"
+            and (settings.APP_ENV == "development" or settings.ALLOW_MOCK_SMS_IN_PROD)
             and settings.SMS_PROVIDER == "mock"
             and settings.DEV_DEFAULT_OTP
             and otp == settings.DEV_DEFAULT_OTP

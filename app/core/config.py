@@ -48,10 +48,14 @@ class Settings(BaseSettings):
     # SMS Providers: "mock", "fast2sms", "twilio"
     SMS_PROVIDER: str = "mock"
     DEV_DEFAULT_OTP: Optional[str] = "123456"
+    ALLOW_MOCK_SMS_IN_PROD: bool = False
     FAST2SMS_API_KEY: Optional[str] = None
     TWILIO_ACCOUNT_SID: Optional[str] = None
     TWILIO_AUTH_TOKEN: Optional[str] = None
     TWILIO_FROM_NUMBER: Optional[str] = None
+
+    # Server Port (injected by cloud platforms like Render)
+    PORT: int = 8000
 
     # Redis (distributed rate limiting)
     REDIS_URL: Optional[str] = None
@@ -89,10 +93,12 @@ class Settings(BaseSettings):
                 raise ValueError("JWT_SECRET_KEY must be a unique secure secret of at least 32 characters in production.")
             if self.OTP_HMAC_SECRET in insecure_defaults or len(self.OTP_HMAC_SECRET) < 32:
                 raise ValueError("OTP_HMAC_SECRET must be a unique secure secret of at least 32 characters in production.")
-            if self.SMS_PROVIDER.lower() == "mock":
-                raise ValueError("SMS_PROVIDER cannot be 'mock' in production.")
-            if "*" in self.CORS_ORIGINS:
+            if self.SMS_PROVIDER.lower() == "mock" and not self.ALLOW_MOCK_SMS_IN_PROD:
+                raise ValueError("SMS_PROVIDER cannot be 'mock' in production unless ALLOW_MOCK_SMS_IN_PROD=true is explicitly set for testing.")
+            if "*" in self.CORS_ORIGINS and not self.ALLOW_MOCK_SMS_IN_PROD:
                 raise ValueError("CORS_ORIGINS cannot contain wildcards ('*') in production.")
+            if not self.ALLOW_MOCK_SMS_IN_PROD:
+                self.DEV_DEFAULT_OTP = None
 
 
 settings = Settings()

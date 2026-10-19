@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: kirna-kart-auth-api
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: APP_NAME
+        value: Kirna Kart Authentication API
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: API_V1_PREFIX
+        value: /api/v1
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: kirna_kart
+      - key: USE_MOCK_DB
+        value: "false"
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ISSUER
+        value: kirna-kart-api
+      - key: JWT_AUDIENCE
+        value: kirna-kart-clients
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "15"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "30"
+      - key: OTP_EXPIRE_SECONDS
+        value: "300"
+      - key: OTP_RESEND_COOLDOWN_SECONDS
+        value: "30"
+      - key: OTP_MAX_ATTEMPTS
+        value: "5"
+      - key: OTP_HMAC_SECRET
+        generateValue: true
+      - key: VERIFICATION_TICKET_EXPIRE_SECONDS
+        value: "300"
+      - key: SMS_PROVIDER
+        value: mock
+      - key: ALLOW_MOCK_SMS_IN_PROD
+        value: "true"
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000,http://localhost:8081"
+      - key: LOG_LEVEL
+        value: INFO
