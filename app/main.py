@@ -104,6 +104,32 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
 
+# Root Route
+@app.get(
+    "/",
+    tags=["System"],
+    summary="Root Service Status",
+    description="Welcome endpoint providing service metadata and API documentation links.",
+    status_code=status.HTTP_200_OK,
+)
+async def root() -> Dict[str, Any]:
+    return {
+        "service": settings.APP_NAME,
+        "environment": settings.APP_ENV,
+        "status": "online",
+        "version": "1.0.0",
+        "documentation": {
+            "swagger_ui": "/docs",
+            "redoc": "/redoc",
+            "openapi_spec": "/openapi.json",
+        },
+        "health": {
+            "liveness": "/health",
+            "readiness": "/ready",
+        },
+    }
+
+
 # Lightweight Liveness Check
 @app.get(
     "/health",

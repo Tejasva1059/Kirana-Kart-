@@ -9,6 +9,12 @@ except ImportError:
     mongomock_motor = None
 
 
+try:
+    import certifi
+except ImportError:
+    certifi = None
+
+
 class MongoManager:
     client: Optional[AsyncIOMotorClient] = None
     db: Optional[AsyncIOMotorDatabase] = None
@@ -29,12 +35,18 @@ class MongoManager:
             return
 
         logger.info(f"Connecting to MongoDB at {target_uri.split('@')[-1] if '@' in target_uri else target_uri}")
+        client_kwargs = {
+            "minPoolSize": settings.MONGODB_MIN_POOL_SIZE,
+            "maxPoolSize": settings.MONGODB_MAX_POOL_SIZE,
+            "serverSelectionTimeoutMS": 10000,
+            "uuidRepresentation": "standard",
+        }
+        if certifi:
+            client_kwargs["tlsCAFile"] = certifi.where()
+
         self.client = AsyncIOMotorClient(
             target_uri,
-            minPoolSize=settings.MONGODB_MIN_POOL_SIZE,
-            maxPoolSize=settings.MONGODB_MAX_POOL_SIZE,
-            serverSelectionTimeoutMS=5000,
-            uuidRepresentation="standard",
+            **client_kwargs,
         )
         self.db = self.client[target_db]
 
