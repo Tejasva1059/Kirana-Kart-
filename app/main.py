@@ -120,8 +120,9 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 # Root Route
-@app.get(
+@app.api_route(
     "/",
+    methods=["GET", "HEAD"],
     tags=["System"],
     summary="Root Service Status",
     description="Welcome endpoint providing service metadata and API documentation links.",
@@ -146,8 +147,9 @@ async def root() -> Dict[str, Any]:
 
 
 # Lightweight Liveness Check
-@app.get(
+@app.api_route(
     "/health",
+    methods=["GET", "HEAD"],
     tags=["System"],
     summary="Lightweight Liveness Check",
     description="Returns lightweight liveness status without exposing internal details.",
