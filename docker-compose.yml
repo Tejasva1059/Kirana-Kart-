@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kirna_kart_auth_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Kirna Kart Authentication API
+      - APP_ENV=production
+      - DEBUG=false
+      - API_V1_PREFIX=/api/v1
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DATABASE=kirna_kart
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=94b7e8d254b38fa160c946f0d9a65cf27d2c3821a78e47bf01b8e19572c842ea
+      - OTP_HMAC_SECRET=b65fd328c8942b10a26ebc8c9fae8b15d023b1853974f1d6b087e56230f28a9c
+      - SMS_PROVIDER=mock
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8081
+      - LOG_LEVEL=INFO
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:7.0
+    container_name: kirna_kart_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: kirna_kart_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo_data:
+  redis_data:
