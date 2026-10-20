@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "c1f7a421-2e11-4777-a89e-2f9b870c918e",
-    "name": "Kirana Kart - Customer Authentication API (v1)",
-    "description": "Production-grade, security-hardened Customer Authentication and Profile APIs for Kirana Kart.\nFeatures separate automated flows for Signup and Login with OTP verification tickets.",
+    "name": "Kirana Kart - Backend APIs (Auth, Addresses, Serviceability, Locations)",
+    "description": "Production-grade, security-hardened Customer Authentication, Address Management, Serviceability, and Location Search APIs for Kirana Kart.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -45,6 +45,31 @@
       "key": "refreshToken",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "addressId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "query",
+      "value": "Khudel",
+      "type": "string"
+    },
+    {
+      "key": "latitude",
+      "value": "22.6841",
+      "type": "string"
+    },
+    {
+      "key": "longitude",
+      "value": "75.9782",
+      "type": "string"
+    },
+    {
+      "key": "postalCode",
+      "value": "453115",
+      "type": "string"
     }
   ],
   "item": [
@@ -81,8 +106,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/otp/request",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "otp", "request"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "request"
+              ]
             },
             "description": "Requests an OTP challenge for customer registration."
           }
@@ -117,8 +150,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/otp/verify",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "otp", "verify"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "verify"
+              ]
             },
             "description": "Verifies signup OTP ('123456' accepted in development) and returns one-time signup ticket."
           }
@@ -154,8 +195,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/customer/signup",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "customer", "signup"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "customer",
+                "signup"
+              ]
             },
             "description": "Creates customer account in MongoDB using signup ticket and issues JWT & refresh tokens."
           }
@@ -195,8 +244,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/otp/request",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "otp", "request"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "request"
+              ]
             },
             "description": "Requests an OTP for an existing customer to login."
           }
@@ -231,8 +288,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/otp/verify",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "otp", "verify"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "verify"
+              ]
             },
             "description": "Verifies login OTP ('123456' accepted in development) and returns one-time login ticket."
           }
@@ -268,8 +333,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/customer/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "customer", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "customer",
+                "login"
+              ]
             },
             "description": "Authenticates existing customer via login ticket and creates an active session."
           }
@@ -291,8 +364,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "me"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
             },
             "description": "Fetches profile of currently authenticated customer using JWT."
           }
@@ -317,8 +397,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/customers/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "customers", "me"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "me"
+              ]
             },
             "description": "Updates approved profile fields. Mobile number updates are strictly rejected."
           }
@@ -354,8 +441,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/token/refresh",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "token", "refresh"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "token",
+                "refresh"
+              ]
             },
             "description": "Rotates refresh token and returns a new access token."
           }
@@ -380,8 +475,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "logout"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
             },
             "description": "Revokes current session and invalidates refresh token."
           }
@@ -389,7 +491,376 @@
       ]
     },
     {
-      "name": "Flow 4 - Health & Probes",
+      "name": "Flow 4 - Address Management",
+      "item": [
+        {
+          "name": "1. List Saved Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/addresses?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Lists saved addresses for the authenticated customer. Default address returned first."
+          }
+        },
+        {
+          "name": "2. Create Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('addressId', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"recipientName\": \"Rahul Sharma\",\n  \"recipientMobile\": \"9876543210\",\n  \"addressLine1\": \"House 12\",\n  \"addressLine2\": \"Near Main Road\",\n  \"landmark\": \"Near Ganesh Temple\",\n  \"locality\": \"Khudel\",\n  \"city\": \"Indore\",\n  \"district\": \"Indore\",\n  \"state\": \"Madhya Pradesh\",\n  \"postalCode\": \"{{postalCode}}\",\n  \"country\": \"India\",\n  \"deliveryInstructions\": \"Call on arrival\",\n  \"location\": {\n    \"type\": \"Point\",\n    \"coordinates\": [75.9782, 22.6841]\n  },\n  \"isDefault\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses"
+              ]
+            },
+            "description": "Creates an address for the authenticated customer. Evaluates serviceability and saves addressId to collection variables."
+          }
+        },
+        {
+          "name": "3. Fetch One Address",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "{{addressId}}"
+              ]
+            },
+            "description": "Fetches a single address by ID. Enforces customer ownership (returns 404 if not owned)."
+          }
+        },
+        {
+          "name": "4. Edit Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Work\",\n  \"addressLine1\": \"Flat 302, Green Valley Apartments\",\n  \"deliveryInstructions\": \"Leave at security desk\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "{{addressId}}"
+              ]
+            },
+            "description": "Partially updates an address. Protected fields are rejected, and address changes re-trigger geocoding and serviceability checks."
+          }
+        },
+        {
+          "name": "5. Set Default Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/addresses/{{addressId}}/default",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "{{addressId}}",
+                "default"
+              ]
+            },
+            "description": "Sets the specified address as default and unsets any previous default atomically."
+          }
+        },
+        {
+          "name": "6. Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "{{addressId}}"
+              ]
+            },
+            "description": "Deletes an address. If the deleted address was default, reassigns default to the most recently updated remaining address."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 5 - Delivery Serviceability",
+      "item": [
+        {
+          "name": "1. Check Serviceability by Saved Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressId\": \"{{addressId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/serviceability/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "serviceability",
+                "check"
+              ]
+            },
+            "description": "Evaluates delivery serviceability for a customer's saved address."
+          }
+        },
+        {
+          "name": "2. Check Serviceability by Coordinates",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": {\n    \"latitude\": 22.6841,\n    \"longitude\": 75.9782\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/serviceability/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "serviceability",
+                "check"
+              ]
+            },
+            "description": "Evaluates delivery serviceability directly using GPS coordinates against polygon service boundaries."
+          }
+        },
+        {
+          "name": "3. Check Serviceability by Address & PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postalCode\": \"453115\",\n  \"city\": \"Indore\",\n  \"locality\": \"Khudel\",\n  \"location\": {\n    \"latitude\": 22.6841,\n    \"longitude\": 75.9782\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/serviceability/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "serviceability",
+                "check"
+              ]
+            },
+            "description": "Pre-check serviceability before saving an address using postal code and coordinates."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 6 - Location Search",
+      "item": [
+        {
+          "name": "1. Search Places & Locations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/locations/search?q={{query}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "locations",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{query}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Searches locations via geocoding provider (Google Places / Mock) and attaches serviceability."
+          }
+        },
+        {
+          "name": "2. Search Places with Location Bias",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/locations/search?q={{query}}&latitude={{latitude}}&longitude={{longitude}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "locations",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{query}}"
+                },
+                {
+                  "key": "latitude",
+                  "value": "{{latitude}}"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{longitude}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Searches places biased towards user's current GPS position."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 7 - Health & Probes",
       "item": [
         {
           "name": "Liveness Probe (/health)",
@@ -397,8 +868,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           }
         },
@@ -408,8 +883,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/ready",
-              "host": ["{{baseUrl}}"],
-              "path": ["ready"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ready"
+              ]
             }
           }
         }

@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Dict
 import mongomock_motor
 import pytest
 import pytest_asyncio
@@ -57,3 +57,58 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
+
+
+@pytest_asyncio.fixture
+async def auth_headers() -> Dict[str, Any]:
+    """Create test customer and return valid Bearer auth headers."""
+    from bson import ObjectId
+    from app.services.token_service import TokenService
+    db = mongo_manager.db
+    now = datetime.now(timezone.utc)
+    cust_id = ObjectId()
+    customer_doc = {
+        "_id": cust_id,
+        "fullName": "Test Customer",
+        "mobileNumberNormalized": "9876543210",
+        "emailNormalized": "testcustomer@example.com",
+        "role": "customer",
+        "status": "active",
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    await db.customers.insert_one(customer_doc)
+    tokens = await TokenService.create_session_and_tokens(customer_id=str(cust_id), role="customer")
+    return {
+        "headers": {"Authorization": f"Bearer {tokens.accessToken}"},
+        "customer_id": str(cust_id),
+        "customer": customer_doc,
+    }
+
+
+@pytest_asyncio.fixture
+async def auth_headers_other() -> Dict[str, Any]:
+    """Create a second distinct customer for cross-customer authorization testing."""
+    from bson import ObjectId
+    from app.services.token_service import TokenService
+    db = mongo_manager.db
+    now = datetime.now(timezone.utc)
+    cust_id = ObjectId()
+    customer_doc = {
+        "_id": cust_id,
+        "fullName": "Other Customer",
+        "mobileNumberNormalized": "9123456789",
+        "emailNormalized": "othercustomer@example.com",
+        "role": "customer",
+        "status": "active",
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    await db.customers.insert_one(customer_doc)
+    tokens = await TokenService.create_session_and_tokens(customer_id=str(cust_id), role="customer")
+    return {
+        "headers": {"Authorization": f"Bearer {tokens.accessToken}"},
+        "customer_id": str(cust_id),
+        "customer": customer_doc,
+    }
+

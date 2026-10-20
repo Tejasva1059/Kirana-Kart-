@@ -55,6 +55,18 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: Optional[str] = None
     TWILIO_FROM_NUMBER: Optional[str] = None
 
+    # Geocoding & Location Search Configuration
+    GEOCODING_PROVIDER: str = "mock"
+    GOOGLE_MAPS_API_KEY: Optional[str] = None
+    GOOGLE_PLACES_API_KEY: Optional[str] = None
+    DEFAULT_COUNTRY: str = "India"
+    DEFAULT_CURRENCY: str = "INR"
+    DEFAULT_DELIVERY_CHARGE: int = 0
+    SERVICEABILITY_FAIL_CLOSED: bool = True
+    LOCATION_SEARCH_MIN_QUERY_LENGTH: int = 2
+    LOCATION_SEARCH_MAX_RESULTS: int = 20
+    GEOCODING_TIMEOUT_SECONDS: int = 5
+
     # Server Port (injected by cloud platforms like Render)
     PORT: int = 8000
 

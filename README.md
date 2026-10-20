@@ -22,7 +22,7 @@ Production-ready, security-focused customer authentication and profile managemen
 ## 2. Project Architecture
 
 ```text
-kirna-kart-auth/
+kirana-kart/
 ├── app/
 │   ├── main.py                     # FastAPI application setup, lifecycle, CORS, error envelopes
 │   ├── core/
@@ -33,39 +33,54 @@ kirna-kart-auth/
 │   │   └── logging.py              # Structured logging with sensitive data redaction
 │   ├── db/
 │   │   ├── mongodb.py              # Motor AsyncIOMotorClient connection & transaction manager
-│   │   └── indexes.py              # Idempotent index initialization for all collections
+│   │   └── indexes.py              # Idempotent index initialization for customers, addresses, service areas
 │   ├── models/
 │   │   ├── customer.py             # Customer MongoDB document model
+│   │   ├── address.py              # Address MongoDB document model with GeoJSON Point
+│   │   ├── service_area.py         # Service Area model with GeoJSON Polygon & PIN allowlists
 │   │   ├── otp.py                  # OTP challenge document model
 │   │   ├── session.py              # Auth session document model
 │   │   └── verification.py         # One-time verification ticket model
 │   ├── schemas/
 │   │   ├── common.py               # Standard ApiResponse and ErrorResponse envelopes
 │   │   ├── auth.py                 # Request and response schemas for OTP, signup, login, refresh
-│   │   └── customer.py             # Public profile and profile update schemas
+│   │   ├── customer.py             # Public profile and profile update schemas
+│   │   ├── address.py              # Request and response schemas for Address CRUD and default address
+│   │   ├── serviceability.py       # Delivery eligibility schemas (by address, coordinates, or postal code)
+│   │   └── location.py             # Location autocomplete & geocoding search schemas
 │   ├── api/
 │   │   └── v1/
-│   │       ├── router.py           # v1 router grouping auth and customer routes
+│   │       ├── router.py           # v1 router grouping auth, customers, addresses, serviceability, locations
 │   │       └── endpoints/
 │   │           ├── auth.py         # Endpoints: OTP, signup, login, token refresh, logout, get me
-│   │           └── customers.py    # Endpoints: Update profile (PATCH /me)
+│   │           ├── customers.py    # Endpoints: Update profile (PATCH /me)
+│   │           ├── addresses.py    # Endpoints: Address CRUD and set default (6 endpoints)
+│   │           ├── serviceability.py# Endpoint: Check delivery serviceability (POST /serviceability/check)
+│   │           └── locations.py    # Endpoint: Location search & autocomplete (GET /locations/search)
 │   ├── services/
 │   │   ├── sms_service.py          # SMS gateway adapter (Mock, Fast2SMS, Twilio)
 │   │   ├── otp_service.py          # OTP generation, HMAC validation, attempts, cooldowns
 │   │   ├── token_service.py        # JWT generation, opaque refresh token rotation, session revocation
 │   │   ├── auth_service.py         # Signup and login business logic with transaction handling
-│   │   └── customer_service.py     # Profile retrieval and field update restrictions
+│   │   ├── customer_service.py     # Profile retrieval and field update restrictions
+│   │   ├── geocoding_service.py    # Provider abstraction (Google Maps / Mock) for geocoding & autocomplete
+│   │   ├── serviceability_service.py# Point-in-polygon ray-casting, PIN allowlists, zero delivery charge
+│   │   └── address_service.py      # Customer address isolation, CRUD, atomic default address reassignment
 │   └── dependencies/
 │       ├── authentication.py       # JWT Bearer dependency with session liveness checks
 │       └── rate_limit.py           # IP and key-based sliding window rate limiters
 ├── tests/
-│   ├── conftest.py                 # Test fixtures and in-memory MongoDB setup
-│   ├── test_otp.py                 # Scenarios 1-8, 26 (OTP generation, validation, cooldown, max attempts)
-│   ├── test_signup.py              # Scenarios 9-13 (Registration, tickets, duplicate rejection, role protection)
-│   ├── test_login.py               # Scenarios 14-15 (Login, nonexistent accounts, ticket replay)
-│   ├── test_tokens.py              # Scenarios 16-19 (Refresh rotation, reuse detection, logout, invalid JWT)
-│   ├── test_customer_profile.py    # Scenarios 20-23 (Profile retrieval, field updates, mobile number lock)
-│   └── test_security_resilience.py # Scenarios 24-25, 27 (Rate limits, concurrency races, health probes)
+│   ├── conftest.py                 # Test fixtures and in-memory MongoDB setup with test customer tokens
+│   ├── test_addresses.py           # Address CRUD, default address reassignment, ownership isolation (16 tests)
+│   ├── test_serviceability.py      # Delivery eligibility checks, launch area polygons, PIN allowlists (6 tests)
+│   ├── test_locations.py           # Location search, query validation, privacy isolation (5 tests)
+│   ├── test_otp.py                 # OTP generation, HMAC validation, cooldown, max attempts (9 tests)
+│   ├── test_signup.py              # Registration, tickets, duplicate rejection, role protection (5 tests)
+│   ├── test_login.py               # Login, nonexistent accounts, ticket replay (3 tests)
+│   ├── test_tokens.py              # Refresh rotation, reuse detection, logout, invalid JWT (4 tests)
+│   ├── test_customer_profile.py    # Profile retrieval, field updates, mobile number lock (4 tests)
+│   ├── test_security_resilience.py # Rate limits, concurrency races, health probes (4 tests)
+│   └── test_system.py              # System health & readiness (3 tests)
 ├── scripts/
 │   └── create_indexes.py           # Standalone index creation script
 ├── .env.example                    # Sample environment variables
@@ -84,6 +99,7 @@ kirna-kart-auth/
 
 All endpoints are prefixed with `/api/v1`.
 
+### Customer Authentication & Profile
 | Method | Endpoint | Purpose | Auth Required |
 |---|---|---|---|
 | `POST` | `/api/v1/auth/otp/request` | Request signup or login OTP | No |
@@ -94,12 +110,67 @@ All endpoints are prefixed with `/api/v1`.
 | `POST` | `/api/v1/auth/logout` | Revoke session and invalidate refresh token | Bearer JWT |
 | `GET` | `/api/v1/auth/me` | Fetch authenticated customer profile | Bearer JWT |
 | `PATCH` | `/api/v1/customers/me` | Update authenticated customer profile | Bearer JWT |
+
+### Address Management
+| Method | Endpoint | Purpose | Auth Required |
+|---|---|---|---|
+| `GET` | `/api/v1/addresses` | List saved addresses (default first, pagination) | Bearer JWT |
+| `POST` | `/api/v1/addresses` | Create an address (auto-default first address, geocodes if missing) | Bearer JWT |
+| `GET` | `/api/v1/addresses/{addressId}` | Fetch single address by ID (ownership enforced, 404 if not owned) | Bearer JWT |
+| `PATCH` | `/api/v1/addresses/{addressId}` | Edit address (allowlisted fields, rechecks geocoding & serviceability) | Bearer JWT |
+| `DELETE` | `/api/v1/addresses/{addressId}` | Delete address (reassigns default to most recently updated address) | Bearer JWT |
+| `PATCH` | `/api/v1/addresses/{addressId}/default` | Set address as default (unsets previous default atomically) | Bearer JWT |
+
+### Delivery Serviceability & Location Search
+| Method | Endpoint | Purpose | Auth Required |
+|---|---|---|---|
+| `POST` | `/api/v1/serviceability/check` | Check delivery eligibility by saved address, coordinates, or postal code | Bearer JWT |
+| `GET` | `/api/v1/locations/search?q=` | Search locations and autocomplete addresses with provider abstraction | No |
+
+### System Probes
+| Method | Endpoint | Purpose | Auth Required |
+|---|---|---|---|
 | `GET` | `/health` | Lightweight liveness probe | No |
 | `GET` | `/ready` | Database readiness check | No |
 
 ---
 
-## 4. Security Architecture
+## 4. Address Management & Delivery Architecture
+
+### 1. Address Ownership Isolation
+- Every address document in the `addresses` collection contains a `customerId` bound directly to the authenticated JWT.
+- Clients can never supply or modify `customerId`.
+- All read, update, delete, and default operations verify that `customerId == authenticated_user_id`.
+- Requests for an address belonging to another customer return `404 NOT_FOUND` (preventing address ID enumeration).
+
+### 2. Concurrency-Safe Default Address Strategy
+- When a customer creates their very first address, it is automatically marked `isDefault: true`.
+- When an address is created or marked as default with `isDefault: true`, an atomic update unsets `isDefault: false` across all other addresses for that customer before marking the target address as default.
+- When a default address is deleted, the service deterministically promotes the most recently updated remaining address (`updatedAt: -1`) to default. If no addresses remain, `newDefaultAddressId` is set to `null`.
+
+### 3. Delivery Serviceability Rules (Indore Launch Corridor)
+- Delivery serviceability is checked against configured `service_areas` documents in MongoDB.
+- Initial Indore Launch Corridor covers:
+  - **Khudel** (PIN `453115`, `[75.9782, 22.6841]`)
+  - **Index Medical College** (PIN `452016`, `[75.9525, 22.7153]`)
+  - **Doublechowki** (PIN `455223`, `[76.0450, 22.6950]`)
+  - **Baawliya** (PIN `453115`, `[75.9850, 22.7050]`)
+  - **Morad** (PIN `453115`, `[75.9650, 22.7250]`)
+  - **Sindhi Baroda** (PIN `453115`, `[75.9900, 22.6700]`)
+  - **Khudel Khurd** (PIN `453115`, `[75.9820, 22.6750]`)
+- Features point-in-polygon ray casting (`is_point_in_polygon`), postal code allowlist matching, and locality checks.
+- Returns `isServiceable: true` with zero delivery charges (`deliveryCharge: 0`, `currency: "INR"`) within launch corridor, or `isServiceable: false` with reason `OUTSIDE_SERVICE_AREA`.
+
+### 4. Geocoding & Location Search Abstraction
+- Implements `BaseGeocodingProvider` with runtime selection via `GEOCODING_PROVIDER`:
+  - `mock`: Pre-configured with verified Indore launch cluster landmarks and coordinate validation for local development and CI testing.
+  - `google_maps`: Integrates with Google Places Autocomplete and Geocoding APIs via `httpx.AsyncClient` with server-side API keys and timeout protection.
+- Private customer addresses are never searched or exposed through `/locations/search`.
+
+
+---
+
+## 5. Security Architecture
 
 1. **HMAC-SHA256 OTP Storage:**
    - Plaintext OTPs are **never stored** in the database or written to log files.
@@ -136,7 +207,7 @@ All endpoints are prefixed with `/api/v1`.
 
 ---
 
-## 5. Local Setup & Execution
+## 6. Local Setup & Execution
 
 ### Prerequisites
 - Python 3.12 or 3.13
@@ -151,7 +222,7 @@ cp .env.example .env
 ```
 
 Review `.env` and configure settings:
-- In local development, `SMS_PROVIDER=mock` captures sent OTPs in-memory for testing.
+- In local development, `SMS_PROVIDER=mock` and `GEOCODING_PROVIDER=mock`.
 - `MONGODB_URI=mongodb://localhost:27017`
 
 ### Step 2: Install Dependencies
@@ -187,26 +258,46 @@ The API will be available at:
 
 ---
 
-## 6. Running the Automated Test Suite
+## 7. Running the Automated Test Suite
 
-The test suite runs against an in-memory asynchronous MongoDB mock (`mongomock-motor`) and tests all 27 required scenarios.
+The test suite runs against an in-memory asynchronous MongoDB mock (`mongomock-motor`) and tests all authentication, address management, delivery serviceability, and location search scenarios.
 
 ```bash
 python -m pytest tests -v
 ```
 
-All 29 tests will execute and pass:
-- OTP generation, HMAC validation, resend cooldown, max attempts, replay prevention
-- Customer signup, ticket validation, duplicate mobile/email conflict, role protection
-- Customer login, nonexistent/blocked customer enumeration defense, ticket replay
-- Token refresh rotation, token reuse attack detection, session revocation, logout
-- Authenticated customer profile retrieval and partial updates with field locks
-- Rate limiting enforcement (429) and race-condition concurrency protection
-- SMS provider failure (503) and MongoDB readiness disconnects (503)
+All **59 tests** will execute and pass:
+- **Addresses (`tests/test_addresses.py` — 16 tests):**
+  - Customer address listing (default address sorted first, pagination with limit/offset)
+  - Address creation with auto-default for first address and geocoding integration
+  - Single address retrieval with strict ownership validation (404 on cross-customer access)
+  - Partial update of allowlisted fields with automatic re-geocoding and serviceability evaluation
+  - Address deletion with deterministic reassignment of default to the latest remaining address
+  - Concurrent default address mutations with race prevention
+  - Validation of Indian 6-digit PIN codes and WGS84 coordinate ranges
+- **Serviceability (`tests/test_serviceability.py` — 6 tests):**
+  - Saved address ID check with ownership verification
+  - Coordinate point-in-polygon ray-casting within Indore launch cluster (Khudel, Index Medical College, Doublechowki, Baawliya, Morad, Sindhi Baroda, Khudel Khurd)
+  - Postal code pre-check before saving address
+  - Out-of-area evaluation returning `isServiceable: false` and `OUTSIDE_SERVICE_AREA`
+  - Disabled service area fallback handling
+- **Location Search (`tests/test_locations.py` — 5 tests):**
+  - Autocomplete search with min-query length, limits, and serviceability cross-referencing
+  - Location search with coordinates bias
+  - Customer address isolation (ensuring private addresses are never leaked)
+  - Geocoding provider timeouts and upstream error handling
+- **Authentication & Security (`tests/test_otp.py`, `test_signup.py`, `test_login.py`, `test_tokens.py`, `test_customer_profile.py`, `test_security_resilience.py`, `test_system.py` — 32 tests):**
+  - OTP generation, HMAC validation, resend cooldown, max attempts, replay prevention
+  - Customer signup, ticket validation, duplicate mobile/email conflict, role protection
+  - Customer login, nonexistent/blocked customer enumeration defense, ticket replay
+  - Token refresh rotation, token reuse attack detection, session revocation, logout
+  - Authenticated customer profile retrieval and partial updates with field locks
+  - Rate limiting enforcement (429) and race-condition concurrency protection
+  - SMS provider failure (503) and MongoDB readiness disconnects (503)
 
 ---
 
-## 7. Docker & Production Deployment
+## 8. Docker & Production Deployment
 
 ### Option A: Run Full Stack via Docker Compose
 
@@ -227,31 +318,41 @@ curl http://localhost:8000/ready
 
 Build the optimized container:
 ```bash
-docker build -t kirna-kart-auth-api:latest .
+docker build -t kirana-kart-api:latest .
 ```
 
 Run with production environment variables:
 ```bash
 docker run -d \
-  --name kirna-kart-auth \
+  --name kirana-kart \
   -p 8000:8000 \
   -e APP_ENV=production \
   -e JWT_SECRET_KEY="<strong-random-secret-at-least-32-chars>" \
   -e OTP_HMAC_SECRET="<separate-strong-random-secret-at-least-32-chars>" \
-  -e MONGODB_URI="mongodb://user:password@mongo-host:27017/kirna_kart?authSource=admin" \
+  -e MONGODB_URI="mongodb://user:password@mongo-host:27017/kirana_kart?authSource=admin" \
   -e REDIS_URL="redis://redis-host:6379/0" \
   -e SMS_PROVIDER="fast2sms" \
   -e FAST2SMS_API_KEY="<your-fast2sms-api-key>" \
-  kirna-kart-auth-api:latest
+  -e GEOCODING_PROVIDER="google_maps" \
+  -e GOOGLE_MAPS_API_KEY="<your-google-maps-api-key>" \
+  kirana-kart-api:latest
 ```
 
 ---
 
-## 8. Postman Collection
+## 9. Postman Collection
 
-An importable Postman collection is included in [`postman_collection.json`](file:///postman_collection.json).
+An importable Postman v2.1 collection is included in [`postman_collection.json`](file:///postman_collection.json).
 
-It includes:
-- All 8 API endpoints + Health and Readiness probes
-- Pre-configured variables: `baseUrl`, `mobileNumber`, `challengeId`, `verificationToken`, `accessToken`, `refreshToken`
-- Post-response test scripts that automatically capture `challengeId`, `verificationToken`, and tokens so you can run the entire signup/login/profile flow seamlessly!
+It includes all 16 endpoints across 7 structured flows:
+- **Flow 1:** Customer Signup (Request OTP -> Verify OTP -> Register Customer)
+- **Flow 2:** Customer Login (Request OTP -> Verify OTP -> Authenticate Customer)
+- **Flow 3:** Authenticated Profile & Session (Get Me -> Update Me -> Refresh Token -> Logout)
+- **Flow 4:** Address Management (List Addresses -> Create Address -> Fetch Address -> Edit Address -> Set Default -> Delete Address)
+- **Flow 5:** Delivery Serviceability (Check by Address ID -> Check by Coordinates -> Check by Address & PIN)
+- **Flow 6:** Location Search (Search Places -> Search Places with Location Bias)
+- **Flow 7:** Health & Readiness Probes (`/health`, `/ready`)
+
+Pre-configured collection variables:
+- `baseUrl`, `mobileNumber`, `signupChallengeId`, `signupVerificationToken`, `loginChallengeId`, `loginVerificationToken`, `accessToken`, `refreshToken`, `addressId`, `query`, `latitude`, `longitude`, `postalCode`.
+

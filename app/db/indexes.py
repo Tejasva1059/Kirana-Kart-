@@ -74,4 +74,42 @@ async def create_indexes() -> None:
     except Exception as exc:
         logger.warning(f"Could not create indexes for 'auth_sessions' collection: {exc}")
 
+    # 5. addresses collection indexes
+    address_indexes = [
+        IndexModel(
+            [("customerId", ASCENDING), ("isDefault", DESCENDING), ("updatedAt", DESCENDING)],
+            name="idx_addresses_customer_default_updated",
+        ),
+        IndexModel(
+            [("customerId", ASCENDING), ("_id", ASCENDING)],
+            name="idx_addresses_customer_id_lookup",
+        ),
+        IndexModel([("location", "2dsphere")], name="idx_addresses_location_2dsphere"),
+    ]
+    try:
+        await db.addresses.create_indexes(address_indexes)
+        logger.info("Created indexes for 'addresses' collection.")
+    except Exception as exc:
+        logger.warning(f"Could not create indexes for 'addresses' collection: {exc}")
+
+    # 6. service_areas collection indexes
+    service_area_indexes = [
+        IndexModel([("serviceAreaId", ASCENDING)], unique=True, name="idx_service_area_id_unique"),
+        IndexModel([("enabled", ASCENDING)], name="idx_service_area_enabled"),
+        IndexModel([("pincodes", ASCENDING)], name="idx_service_area_pincodes"),
+        IndexModel([("polygon", "2dsphere")], name="idx_service_area_polygon_2dsphere"),
+    ]
+    try:
+        await db.service_areas.create_indexes(service_area_indexes)
+        logger.info("Created indexes for 'service_areas' collection.")
+    except Exception as exc:
+        logger.warning(f"Could not create indexes for 'service_areas' collection: {exc}")
+
+    # Seed default launch service area
+    try:
+        from app.services.serviceability_service import ServiceabilityService
+        await ServiceabilityService.seed_default_service_areas_if_needed()
+    except Exception as exc:
+        logger.warning(f"Could not seed default launch service areas: {exc}")
+
     logger.info("All collection indexes processed successfully.")
