@@ -1,1 +1,1 @@
-"""Kirna Kart Schemas Package."""
+"""Kirana Kart Schemas Package."""

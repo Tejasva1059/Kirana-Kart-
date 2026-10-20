@@ -16,5 +16,6 @@ class ServiceAreaInDB(BaseModel):
     pincodes: List[str] = Field(default_factory=list)
     localities: List[str] = Field(default_factory=list)
     polygon: Optional[Dict[str, Any]] = None  # GeoJSON Polygon
+    shopIds: List[str] = Field(default_factory=list)
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

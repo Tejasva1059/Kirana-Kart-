@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "c1f7a421-2e11-4777-a89e-2f9b870c918e",
-    "name": "Kirana Kart - Backend APIs (Auth, Addresses, Serviceability, Locations)",
-    "description": "Production-grade, security-hardened Customer Authentication, Address Management, Serviceability, and Location Search APIs for Kirana Kart.",
+    "name": "Kirana Kart - Backend APIs (Auth, Addresses, Catalogue, Shops)",
+    "description": "Complete production-ready API collection for Kirana Kart quick-commerce platform: Customer Authentication, Address Management, Delivery Serviceability, Location Search, Home Banners, Categories, Products, and Shops.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -69,6 +69,31 @@
     {
       "key": "postalCode",
       "value": "453115",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "variantId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "shopId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "serviceAreaId",
+      "value": "indore-launch-area",
       "type": "string"
     }
   ],
@@ -855,6 +880,513 @@
               ]
             },
             "description": "Searches places biased towards user's current GPS position."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 7 - Home Banners",
+      "item": [
+        {
+          "name": "1. Load Home Banners",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/banners?serviceAreaId={{serviceAreaId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "banners"
+              ],
+              "query": [
+                {
+                  "key": "serviceAreaId",
+                  "value": "{{serviceAreaId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Loads active and scheduled home promotional banners for the selected service area."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 8 - Categories",
+      "item": [
+        {
+          "name": "1. List Categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "    pm.collectionVariables.set('categoryId', json.data.items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories?includeSubcategories=true&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "includeSubcategories",
+                  "value": "true"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Lists top-level active categories with optional nested subcategories."
+          }
+        },
+        {
+          "name": "2. Get Category by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Fetches category details by category ID."
+          }
+        },
+        {
+          "name": "3. List Subcategories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}/subcategories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                "{{categoryId}}",
+                "subcategories"
+              ]
+            },
+            "description": "Returns active child subcategories of the specified category."
+          }
+        },
+        {
+          "name": "4. List Category Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}/products?shopId={{shopId}}&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                "{{categoryId}}",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "shopId",
+                  "value": "{{shopId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Lists products assigned to a category with optional shop pricing and inventory."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 9 - Products Catalogue",
+      "item": [
+        {
+          "name": "1. Browse, Filter & Search Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "    pm.collectionVariables.set('productId', json.data.items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?q=tea&shopId={{shopId}}&inStockOnly=false&sort=price_asc&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "tea"
+                },
+                {
+                  "key": "shopId",
+                  "value": "{{shopId}}"
+                },
+                {
+                  "key": "inStockOnly",
+                  "value": "false"
+                },
+                {
+                  "key": "sort",
+                  "value": "price_asc"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Browse and search products across keywords, brand, category, with price sorting and shop inventory."
+          }
+        },
+        {
+          "name": "2. Product Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{productId}}?shopId={{shopId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{productId}}"
+              ],
+              "query": [
+                {
+                  "key": "shopId",
+                  "value": "{{shopId}}"
+                }
+              ]
+            },
+            "description": "Fetches product details, images, brand, category, and shop-specific pricing."
+          }
+        },
+        {
+          "name": "3. Product Variants & Pack Sizes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "    pm.collectionVariables.set('variantId', json.data.items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{productId}}/variants?shopId={{shopId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{productId}}",
+                "variants"
+              ],
+              "query": [
+                {
+                  "key": "shopId",
+                  "value": "{{shopId}}"
+                }
+              ]
+            },
+            "description": "Fetches all pack sizes and SKUs for a product with available inventory and MRP/selling price."
+          }
+        },
+        {
+          "name": "4. Product Availability Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{productId}}/availability?shopId={{shopId}}&variantId={{variantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{productId}}",
+                "availability"
+              ],
+              "query": [
+                {
+                  "key": "shopId",
+                  "value": "{{shopId}}"
+                },
+                {
+                  "key": "variantId",
+                  "value": "{{variantId}}"
+                }
+              ]
+            },
+            "description": "Evaluates purchasing availability based on shop operating hours, order acceptance, and stock."
+          }
+        },
+        {
+          "name": "5. Related Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{productId}}/related?shopId={{shopId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{productId}}",
+                "related"
+              ],
+              "query": [
+                {
+                  "key": "shopId",
+                  "value": "{{shopId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Returns related active products based on shared category or brand."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 10 - Shops & Storefronts",
+      "item": [
+        {
+          "name": "1. Find Available Shops (by PIN / Service Area)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "    pm.collectionVariables.set('shopId', json.data.items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shops?postalCode={{postalCode}}&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shops"
+              ],
+              "query": [
+                {
+                  "key": "postalCode",
+                  "value": "{{postalCode}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Finds eligible active shops for a delivery location."
+          }
+        },
+        {
+          "name": "2. Find Shops by GPS Coordinates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shops?latitude={{latitude}}&longitude={{longitude}}&openNow=true&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shops"
+              ],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "{{latitude}}"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{longitude}}"
+                },
+                {
+                  "key": "openNow",
+                  "value": "true"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Finds open shops whose service area polygon encompasses the GPS coordinates."
+          }
+        },
+        {
+          "name": "3. Get Shop Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shops/{{shopId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shops",
+                "{{shopId}}"
+              ]
+            },
+            "description": "Returns public shop address, contact phone, operating hours, and live open status."
+          }
+        },
+        {
+          "name": "4. Shop Catalogue",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shops/{{shopId}}/products?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shops",
+                "{{shopId}}",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Authoritative product catalogue scoped to the selected shop with shop-specific prices and inventory."
+          }
+        },
+        {
+          "name": "5. Shop Availability & Operating Hours",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shops/{{shopId}}/availability?serviceAreaId={{serviceAreaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shops",
+                "{{shopId}}",
+                "availability"
+              ],
+              "query": [
+                {
+                  "key": "serviceAreaId",
+                  "value": "{{serviceAreaId}}"
+                }
+              ]
+            },
+            "description": "Calculates whether a shop is currently open and accepting orders in its local timezone."
           }
         }
       ]

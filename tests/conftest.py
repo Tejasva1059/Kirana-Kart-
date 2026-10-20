@@ -60,6 +60,18 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest_asyncio.fixture
+async def client(async_client: AsyncClient) -> AsyncClient:
+    """Convenience alias for async_client."""
+    return async_client
+
+
+@pytest.fixture
+def test_db():
+    """Returns active test MongoDB database."""
+    return mongo_manager.db
+
+
+@pytest_asyncio.fixture
 async def auth_headers() -> Dict[str, Any]:
     """Create test customer and return valid Bearer auth headers."""
     from bson import ObjectId

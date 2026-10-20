@@ -127,6 +127,36 @@ All endpoints are prefixed with `/api/v1`.
 | `POST` | `/api/v1/serviceability/check` | Check delivery eligibility by saved address, coordinates, or postal code | Bearer JWT |
 | `GET` | `/api/v1/locations/search?q=` | Search locations and autocomplete addresses with provider abstraction | No |
 
+### Home Banners
+| Method | Endpoint | Purpose | Auth Required |
+|---|---|---|---|
+| `GET` | `/api/v1/banners` | Load active home promotional banners (optional serviceAreaId filter) | No |
+
+### Categories & Subcategories
+| Method | Endpoint | Purpose | Auth Required |
+|---|---|---|---|
+| `GET` | `/api/v1/categories` | List top-level categories (optional nested subcategories & featured filter) | No |
+| `GET` | `/api/v1/categories/{categoryId}` | Get category details | No |
+| `GET` | `/api/v1/categories/{categoryId}/subcategories` | List active child subcategories | No |
+| `GET` | `/api/v1/categories/{categoryId}/products` | List category products with optional shop pricing and inventory | No |
+
+### Products Catalogue
+| Method | Endpoint | Purpose | Auth Required |
+|---|---|---|---|
+| `GET` | `/api/v1/products` | Browse, search, filter, and paginate products | No |
+| `GET` | `/api/v1/products/{productId}` | Product details with optional shop-scoped pricing and stock | No |
+| `GET` | `/api/v1/products/{productId}/variants` | Product pack sizes, normalized units, SKUs, and shop inventory | No |
+| `GET` | `/api/v1/products/{productId}/availability` | Check purchasing availability against shop hours and stock | No |
+| `GET` | `/api/v1/products/{productId}/related` | Related products by category/brand (excluding original product) | No |
+
+### Shops & Storefronts
+| Method | Endpoint | Purpose | Auth Required |
+|---|---|---|---|
+| `GET` | `/api/v1/shops` | Find available active shops by GPS coordinates, postal code, or area | No |
+| `GET` | `/api/v1/shops/{shopId}` | Shop details, address, opening hours, and real-time open status | No |
+| `GET` | `/api/v1/shops/{shopId}/products` | Authoritative shop catalogue with shop-specific prices and stock | No |
+| `GET` | `/api/v1/shops/{shopId}/availability` | Shop operating hours, open status, and order acceptance | No |
+
 ### System Probes
 | Method | Endpoint | Purpose | Auth Required |
 |---|---|---|---|
@@ -260,13 +290,33 @@ The API will be available at:
 
 ## 7. Running the Automated Test Suite
 
-The test suite runs against an in-memory asynchronous MongoDB mock (`mongomock-motor`) and tests all authentication, address management, delivery serviceability, and location search scenarios.
+The test suite runs against an in-memory asynchronous MongoDB mock (`mongomock-motor`) and tests all authentication, address management, delivery serviceability, location search, catalogue, and shop scenarios.
 
 ```bash
 python -m pytest tests -v
 ```
 
-All **59 tests** will execute and pass:
+All **70 tests** execute and pass:
+- **Home Banners (`tests/test_banners.py` — 2 tests):**
+  - Active and schedule-windowed banner filtering (startsAt/endsAt)
+  - Inactive banner exclusion and delivery service area targeting
+- **Categories & Hierarchy (`tests/test_categories.py` — 2 tests):**
+  - Deterministic sort order and featured filtering
+  - Nested subcategory inclusion (`includeSubcategories=true`)
+  - Subcategory listing and 404 validation for nonexistent parents
+  - Category product listings
+- **Products & Catalogue (`tests/test_products.py` — 4 tests):**
+  - Keyword search (`q`), brand filtering, and pagination limits
+  - Shop-scoped pricing (integer paise) and stock calculation
+  - Absence of fabricated prices when shop context is omitted
+  - Product availability checks (`AVAILABLE`, `SHOP_CLOSED`, `SHOP_NOT_ACCEPTING_ORDERS`, `OUT_OF_STOCK`)
+  - Pack sizes, SKUs, and units
+  - Related product recommendations excluding original product
+- **Shops & Operating Hours (`tests/test_shops.py` — 3 tests):**
+  - Active shop discovery by postal code and service area
+  - Shop details and 404 error handling
+  - Authoritative shop catalogue with shop-specific inventory
+  - Real-time opening hours, break periods, and timezone (`Asia/Kolkata`) availability
 - **Addresses (`tests/test_addresses.py` — 16 tests):**
   - Customer address listing (default address sorted first, pagination with limit/offset)
   - Address creation with auto-default for first address and geocoding integration

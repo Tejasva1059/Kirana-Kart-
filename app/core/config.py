@@ -67,10 +67,18 @@ class Settings(BaseSettings):
     LOCATION_SEARCH_MAX_RESULTS: int = 20
     GEOCODING_TIMEOUT_SECONDS: int = 5
 
+    # Catalogue Configuration
+    DEFAULT_TIMEZONE: str = "Asia/Kolkata"
+    CATALOGUE_DEFAULT_LIMIT: int = 20
+    CATALOGUE_MAX_LIMIT: int = 100
+    BANNER_DEFAULT_LIMIT: int = 10
+    BANNER_MAX_LIMIT: int = 20
+    ENABLE_CATALOGUE_CACHE: bool = False
+
     # Server Port (injected by cloud platforms like Render)
     PORT: int = 8000
 
-    # Redis (distributed rate limiting)
+    # Redis (distributed rate limiting & catalogue cache)
     REDIS_URL: Optional[str] = None
 
     # CORS
