@@ -186,11 +186,17 @@ async def create_indexes() -> None:
     except Exception as exc:
         logger.warning(f"Could not create indexes for 'shop_inventory' collection: {exc}")
 
-    # Seed default launch service area
+    # Seed default launch service area & catalogue
     try:
         from app.services.serviceability_service import ServiceabilityService
         await ServiceabilityService.seed_default_service_areas_if_needed()
     except Exception as exc:
         logger.warning(f"Could not seed default launch service areas: {exc}")
+
+    try:
+        from app.services.catalogue_seed import seed_default_catalogue_if_needed
+        await seed_default_catalogue_if_needed()
+    except Exception as exc:
+        logger.warning(f"Could not seed default launch catalogue: {exc}")
 
     logger.info("All collection indexes processed successfully.")
