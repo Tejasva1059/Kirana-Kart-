@@ -929,7 +929,12 @@
                 "exec": [
                   "var json = pm.response.json();",
                   "if (json.data && json.data.items && json.data.items.length > 0) {",
-                  "    pm.collectionVariables.set('categoryId', json.data.items[0].id);",
+                  "    var pulses = json.data.items.find(function(c) { return c.slug === 'pulses' || (c.name && c.name.toLowerCase().indexOf('pulse') !== -1); });",
+                  "    if (pulses) {",
+                  "        pm.collectionVariables.set('categoryId', pulses.id);",
+                  "    } else {",
+                  "        pm.collectionVariables.set('categoryId', json.data.items[0].id);",
+                  "    }",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -1007,6 +1012,20 @@
         },
         {
           "name": "4. List Category Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "    pm.collectionVariables.set('productId', json.data.items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "url": {
@@ -1063,7 +1082,7 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/api/v1/products?q=tea&shopId={{shopId}}&inStockOnly=false&sort=price_asc&limit=20&offset=0",
+              "raw": "{{baseUrl}}/api/v1/products?shopId={{shopId}}&inStockOnly=false&sort=price_asc&limit=20&offset=0",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1073,10 +1092,6 @@
                 "products"
               ],
               "query": [
-                {
-                  "key": "q",
-                  "value": "tea"
-                },
                 {
                   "key": "shopId",
                   "value": "{{shopId}}"
