@@ -19,6 +19,8 @@ class PaginationMeta(BaseModel):
     total: int = 0
     limit: int = 20
     offset: int = 0
+    page: Optional[int] = None
+    totalPages: Optional[int] = None
     hasMore: bool = False
 
 

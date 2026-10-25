@@ -27,14 +27,24 @@ async def list_products(
     shopId: Optional[str] = Query(None, description="Selected shop identifier for price and inventory scoping"),
     serviceAreaId: Optional[str] = Query(None, description="Service area identifier to resolve eligible shops"),
     brand: Optional[str] = Query(None, description="Filter by brand"),
-    minPrice: Optional[int] = Query(None, ge=0, description="Minimum price in paise"),
-    maxPrice: Optional[int] = Query(None, ge=0, description="Maximum price in paise"),
-    inStockOnly: bool = Query(False, description="Show only products currently in stock at selected shop"),
+    minPrice: Optional[int] = Query(None, description="Minimum price in paise"),
+    maxPrice: Optional[int] = Query(None, description="Maximum price in paise"),
+    inStock: Optional[bool] = Query(None, description="Filter by stock availability (true for in-stock, false for out-of-stock)"),
+    inStockOnly: bool = Query(False, description="Legacy boolean parameter for in-stock filtering"),
     featuredOnly: bool = Query(False, description="Show only featured products"),
     sort: str = Query("relevance", description="Sort order: relevance, price_asc, price_desc, name_asc, newest"),
+    sortBy: Optional[str] = Query(None, description="Alias for sort parameter"),
+    page: Optional[int] = Query(None, ge=1, description="Page number (1-indexed)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
 ) -> ApiResponse[ProductListResponseData]:
+    # Resolve pagination offset
+    effective_page = page if page is not None else (offset // limit + 1)
+    if page is not None:
+        offset = (page - 1) * limit
+
+    chosen_sort = sortBy or sort
+
     items, total = await ProductService.list_products(
         q=q,
         category_id=categoryId,
@@ -45,18 +55,28 @@ async def list_products(
         min_price=minPrice,
         max_price=maxPrice,
         in_stock_only=inStockOnly,
+        in_stock=inStock,
         featured_only=featuredOnly,
-        sort=sort,
+        sort=chosen_sort,
+        sort_by=sortBy,
         limit=limit,
         offset=offset,
     )
     has_more = (offset + limit) < total
+    total_pages = (total + limit - 1) // limit if total > 0 else 0
     return ApiResponse(
         success=True,
         message="Products fetched successfully.",
         data=ProductListResponseData(
             items=items,
-            pagination=PaginationMeta(total=total, limit=limit, offset=offset, hasMore=has_more),
+            pagination=PaginationMeta(
+                total=total,
+                limit=limit,
+                offset=offset,
+                page=effective_page,
+                totalPages=total_pages,
+                hasMore=has_more,
+            ),
         ),
     )
 

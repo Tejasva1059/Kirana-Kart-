@@ -1407,6 +1407,271 @@
       ]
     },
     {
+      "name": "Flow 11 - Search & Discovery",
+      "item": [
+        {
+          "name": "1. Search Products (q=tuar dal)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search?q=tuar dal&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "tuar dal"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Searches grocery products across names, brands, keywords, SKUs, and categories with ranking and availability."
+          }
+        },
+        {
+          "name": "2. Search with Category & Stock Filter",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search?q=dal&categoryId={{categoryId}}&inStock=true&sortBy=price_asc&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "dal"
+                },
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}"
+                },
+                {
+                  "key": "inStock",
+                  "value": "true"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price_asc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Search grocery products with category filter, in-stock filtering, and ascending price sorting."
+          }
+        },
+        {
+          "name": "3. Autocomplete Suggestions (q=tu)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search/suggestions?q=tu&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "tu"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Returns lightweight autocomplete suggestions across product names, categories, and brands."
+          }
+        },
+        {
+          "name": "4. Trending Searches",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search/trending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search",
+                "trending"
+              ]
+            },
+            "description": "Returns popular search queries aggregated from actual search events over the last 7 days."
+          }
+        },
+        {
+          "name": "5. Filter Products by Category (API 4)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?categoryId={{categoryId}}&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Filters products by category with pagination."
+          }
+        },
+        {
+          "name": "6. Sort Products by Price (API 5)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?sortBy=price_asc&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "price_asc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Sorts products by price ascending with deterministic tie-breaking."
+          }
+        },
+        {
+          "name": "7. Filter In-Stock Products (API 6)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?inStock=true&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "inStock",
+                  "value": "true"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Returns only products currently in stock."
+          }
+        },
+        {
+          "name": "8. Combined Category + InStock + PriceSort + Pagination",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?categoryId={{categoryId}}&inStock=true&sortBy=price_asc&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}"
+                },
+                {
+                  "key": "inStock",
+                  "value": "true"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price_asc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Demonstrates combined category filtering, stock check, price sorting, and pagination."
+          }
+        }
+      ]
+    },
+    {
       "name": "Flow 7 - Health & Probes",
       "item": [
         {

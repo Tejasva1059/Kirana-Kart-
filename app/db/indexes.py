@@ -142,6 +142,8 @@ async def create_indexes() -> None:
         IndexModel([("subcategoryId", ASCENDING), ("isActive", ASCENDING)], name="idx_products_subcategory_active"),
         IndexModel([("isActive", ASCENDING), ("isFeatured", ASCENDING)], name="idx_products_active_featured"),
         IndexModel([("searchKeywords", ASCENDING)], name="idx_products_keywords"),
+        IndexModel([("name", ASCENDING), ("isActive", ASCENDING)], name="idx_products_name_active"),
+        IndexModel([("brand", ASCENDING), ("isActive", ASCENDING)], name="idx_products_brand_active"),
     ]
     try:
         await db.products.create_indexes(product_indexes)
@@ -185,6 +187,18 @@ async def create_indexes() -> None:
         logger.info("Created indexes for 'shop_inventory' collection.")
     except Exception as exc:
         logger.warning(f"Could not create indexes for 'shop_inventory' collection: {exc}")
+
+    # 13. search_events collection indexes
+    search_event_indexes = [
+        IndexModel([("createdAt", DESCENDING)], name="idx_search_events_created"),
+        IndexModel([("normalizedQuery", ASCENDING), ("createdAt", DESCENDING)], name="idx_search_events_query_created"),
+        IndexModel([("resultCount", ASCENDING), ("createdAt", DESCENDING)], name="idx_search_events_result_count_created"),
+    ]
+    try:
+        await db.search_events.create_indexes(search_event_indexes)
+        logger.info("Created indexes for 'search_events' collection.")
+    except Exception as exc:
+        logger.warning(f"Could not create indexes for 'search_events' collection: {exc}")
 
     # Seed default launch service area & catalogue
     try:

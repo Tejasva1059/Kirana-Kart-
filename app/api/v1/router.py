@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     customers,
     locations,
     products,
+    search,
     serviceability,
     shops,
 )
@@ -21,4 +22,5 @@ api_v1_router.include_router(locations.router)
 api_v1_router.include_router(banners.router)
 api_v1_router.include_router(categories.router)
 api_v1_router.include_router(products.router)
+api_v1_router.include_router(search.router)
 api_v1_router.include_router(shops.router)

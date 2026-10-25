@@ -67,14 +67,47 @@ class ProductService:
         min_price: Optional[int] = None,
         max_price: Optional[int] = None,
         in_stock_only: bool = False,
+        in_stock: Optional[bool] = None,
         featured_only: bool = False,
         sort: str = "relevance",
+        sort_by: Optional[str] = None,
         limit: int = 20,
         offset: int = 0,
     ) -> Tuple[List[ProductListItem], int]:
         db = get_db()
         limit = min(max(limit, 1), 100)
         offset = max(offset, 0)
+
+        # Validation
+        chosen_sort = (sort_by or sort or "relevance").strip().lower()
+        valid_sorts = {"relevance", "price_asc", "price_desc", "name_asc", "newest"}
+        if chosen_sort not in valid_sorts:
+            raise BadRequestException(
+                f"Unsupported sort value '{chosen_sort}'. Supported values: relevance, price_asc, price_desc, name_asc, newest.",
+                code="UNSUPPORTED_SORT",
+            )
+        sort = chosen_sort
+
+        if min_price is not None and min_price < 0:
+            raise BadRequestException("minPrice cannot be negative.", code="INVALID_PRICE")
+        if max_price is not None and max_price < 0:
+            raise BadRequestException("maxPrice cannot be negative.", code="INVALID_PRICE")
+        if min_price is not None and max_price is not None and min_price > max_price:
+            raise BadRequestException("minPrice cannot be greater than maxPrice.", code="INVALID_PRICE_RANGE")
+
+        if category_id:
+            clean_cat = category_id.strip()
+            if not clean_cat:
+                raise BadRequestException("Invalid categoryId format.", code="INVALID_CATEGORY_ID")
+            if not ObjectId.is_valid(clean_cat) and not re.match(r"^[a-zA-Z0-9_-]{3,50}$", clean_cat):
+                raise BadRequestException("Invalid categoryId format.", code="INVALID_CATEGORY_ID")
+
+        if shop_id:
+            clean_shop = shop_id.strip()
+            if not clean_shop:
+                raise BadRequestException("Invalid shopId format.", code="INVALID_SHOP_ID")
+            if not ObjectId.is_valid(clean_shop) and not re.match(r"^[a-zA-Z0-9_-]{3,50}$", clean_shop):
+                raise BadRequestException("Invalid shopId format.", code="INVALID_SHOP_ID")
 
         # Base product query: must be active
         query: dict = {"isActive": True}
@@ -103,17 +136,15 @@ class ProductService:
 
         # Resolve eligible shops
         eligible_shop_ids = await cls.get_eligible_shop_ids(shop_id, service_area_id)
+        if not eligible_shop_ids and (shop_id is None and service_area_id is None):
+            # Resolve active shops for catalogue pricing & availability
+            cursor_s = db.shops.find({"isActive": True})
+            async for s in cursor_s:
+                eligible_shop_ids.append(str(s["_id"]))
         has_shop_context = bool(eligible_shop_ids)
 
         # Fetch products matching catalogue query
-        # Sorting
-        sort_field = [("createdAt", -1)]
-        if sort == "name_asc":
-            sort_field = [("name", 1)]
-        elif sort == "newest":
-            sort_field = [("createdAt", -1)]
-
-        cursor = db.products.find(query).sort(sort_field)
+        cursor = db.products.find(query)
         matched_products = []
         async for p in cursor:
             matched_products.append(p)
@@ -223,8 +254,13 @@ class ProductService:
                     reasonCode="AVAILABLE" if has_stock else "OUT_OF_STOCK",
                 )
 
-            # Filtering: in_stock_only
-            if in_stock_only and has_shop_context and not has_stock:
+            # Filtering: in_stock
+            if in_stock is not None:
+                if in_stock is True and not has_stock:
+                    continue
+                if in_stock is False and has_stock:
+                    continue
+            elif in_stock_only and not has_stock:
                 continue
 
             # Filtering: min_price / max_price
@@ -250,11 +286,17 @@ class ProductService:
                 )
             )
 
-        # In-memory sorting for price
+        # Deterministic in-memory sorting
         if sort == "price_asc":
-            items.sort(key=lambda x: x.price.amountPaise if x.price else float("inf"))
+            items.sort(key=lambda x: (x.price.amountPaise is None if x.price else True, x.price.amountPaise if x.price else 0, x.id))
         elif sort == "price_desc":
-            items.sort(key=lambda x: x.price.amountPaise if x.price else -1, reverse=True)
+            items.sort(key=lambda x: (x.price.amountPaise is None if x.price else True, -(x.price.amountPaise) if x.price else 0, x.id))
+        elif sort == "name_asc":
+            items.sort(key=lambda x: (x.name.lower(), x.id))
+        elif sort == "newest":
+            items.sort(key=lambda x: x.id, reverse=True)
+        else:
+            items.sort(key=lambda x: x.id)
 
         total = len(items)
         paginated_items = items[offset : offset + limit]
