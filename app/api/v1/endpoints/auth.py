@@ -120,11 +120,20 @@ async def login_customer(payload: CustomerLoginRequest, request: Request) -> Api
     description="Atomically rotates the opaque refresh token, checks for token reuse attacks, and issues a new JWT access token.",
     dependencies=[Depends(rate_limit_by_ip(max_requests=30, window_seconds=60, prefix="refresh"))],
 )
+@router.post(
+    "/refresh",
+    response_model=ApiResponse[TokenData],
+    status_code=status.HTTP_200_OK,
+    summary="Rotate refresh token and issue new access token (alias)",
+    description="Alias for /token/refresh for client backward compatibility.",
+    include_in_schema=False,
+    dependencies=[Depends(rate_limit_by_ip(max_requests=30, window_seconds=60, prefix="refresh"))],
+)
 async def refresh_tokens(payload: TokenRefreshRequest) -> ApiResponse[TokenData]:
     tokens = await TokenService.rotate_refresh_token(raw_refresh_token=payload.refreshToken)
     return ApiResponse[TokenData](
         success=True,
-        message="Token refreshed successfully.",
+        message="Tokens refreshed successfully",
         data=tokens,
     )
 

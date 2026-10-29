@@ -49,6 +49,9 @@ pytest-cache-files-*/
 htmlcov/
 .tox/
 
+# Scratch & temporary
+scratch/
+
 # Logs
 *.log
 logs/

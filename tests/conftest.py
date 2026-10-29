@@ -1,3 +1,7 @@
+import os
+os.environ["USE_MOCK_DB"] = "true"
+os.environ["APP_ENV"] = "testing"
+
 import asyncio
 from datetime import datetime, timezone
 from typing import Any, AsyncGenerator, Dict
@@ -11,13 +15,6 @@ from app.db.indexes import create_indexes
 from app.db.mongodb import mongo_manager
 from app.main import app
 from app.services.sms_service import mock_sms_instance
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest_asyncio.fixture(autouse=True)

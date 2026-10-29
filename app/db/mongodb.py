@@ -22,9 +22,11 @@ class MongoManager:
     is_fallback_mock: bool = False
 
     async def connect(self, uri: Optional[str] = None, database_name: Optional[str] = None, use_mock: Optional[bool] = None) -> None:
+        if self.db is not None and use_mock is None:
+            return
         target_uri = uri or settings.MONGODB_URI
         target_db = database_name or settings.MONGODB_DATABASE
-        is_mock = use_mock if use_mock is not None else settings.USE_MOCK_DB
+        is_mock = use_mock if use_mock is not None else (settings.USE_MOCK_DB or settings.APP_ENV == "testing")
 
         if is_mock:
             if mongomock_motor is None:

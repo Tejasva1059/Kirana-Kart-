@@ -64,6 +64,7 @@ async def create_indexes() -> None:
     session_indexes = [
         IndexModel([("sessionId", ASCENDING)], unique=True, name="idx_session_id_unique"),
         IndexModel([("refreshTokenHash", ASCENDING)], name="idx_session_refresh_token_hash"),
+        IndexModel([("previousRefreshTokenHashes", ASCENDING)], name="idx_session_prev_tokens"),
         IndexModel([("customerId", ASCENDING)], name="idx_session_customer_id"),
         IndexModel([("expiresAt", ASCENDING)], expireAfterSeconds=0, name="idx_session_ttl_expires"),
         IndexModel([("revokedAt", ASCENDING)], name="idx_session_revoked_at"),
@@ -199,6 +200,39 @@ async def create_indexes() -> None:
         logger.info("Created indexes for 'search_events' collection.")
     except Exception as exc:
         logger.warning(f"Could not create indexes for 'search_events' collection: {exc}")
+
+    # 14. carts collection indexes
+    cart_indexes = [
+        IndexModel(
+            [("customerId", ASCENDING), ("status", ASCENDING)],
+            unique=True,
+            partialFilterExpression={"customerId": {"$type": "string"}, "status": "active"},
+            name="idx_carts_customer_active_unique",
+        ),
+        IndexModel(
+            [("guestCartId", ASCENDING)],
+            unique=True,
+            partialFilterExpression={"guestCartId": {"$type": "string"}},
+            name="idx_carts_guest_cart_unique",
+        ),
+        IndexModel([("updatedAt", DESCENDING)], name="idx_carts_updated_at"),
+    ]
+    try:
+        await db.carts.create_indexes(cart_indexes)
+        logger.info("Created indexes for 'carts' collection.")
+    except Exception as exc:
+        logger.warning(f"Could not create indexes for 'carts' collection: {exc}")
+
+    # 15. wishlists collection indexes
+    wishlist_indexes = [
+        IndexModel([("customerId", ASCENDING)], unique=True, name="idx_wishlists_customer_unique"),
+        IndexModel([("updatedAt", DESCENDING)], name="idx_wishlists_updated_at"),
+    ]
+    try:
+        await db.wishlists.create_indexes(wishlist_indexes)
+        logger.info("Created indexes for 'wishlists' collection.")
+    except Exception as exc:
+        logger.warning(f"Could not create indexes for 'wishlists' collection: {exc}")
 
     # Seed default launch service area & catalogue
     try:

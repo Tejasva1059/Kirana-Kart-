@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 from bson import ObjectId
 from pymongo import ReturnDocument
+from jose import jwt
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedException
 from app.core.logging import logger
@@ -36,6 +37,7 @@ class TokenService:
             "sessionId": session_id,
             "customerId": str(customer_id),
             "refreshTokenHash": refresh_token_hash,
+            "previousRefreshTokenHashes": [],
             "createdAt": now,
             "expiresAt": refresh_expires_at,
             "lastUsedAt": now,
@@ -62,16 +64,40 @@ class TokenService:
 
     @staticmethod
     async def rotate_refresh_token(raw_refresh_token: str) -> TokenData:
+        if not raw_refresh_token or not raw_refresh_token.strip():
+            raise UnauthorizedException("Invalid or missing refresh token.", code="INVALID_REFRESH_TOKEN")
+
+        cleaned_token = raw_refresh_token.strip()
+
+        # Reject access tokens supplied instead of refresh tokens
+        if cleaned_token.count(".") == 2:
+            try:
+                unverified = jwt.get_unverified_claims(cleaned_token)
+                if unverified.get("type") == "access":
+                    raise UnauthorizedException(
+                        "An access token cannot be used as a refresh token.",
+                        code="INVALID_TOKEN_TYPE",
+                    )
+            except UnauthorizedException:
+                raise
+            except Exception:
+                pass
+
         db = get_db()
         now = datetime.now(timezone.utc)
-        token_hash = compute_sha256_hash(raw_refresh_token)
+        token_hash = compute_sha256_hash(cleaned_token)
 
         # 1. Lookup session by current token hash
         session = await db.auth_sessions.find_one({"refreshTokenHash": token_hash})
 
         if not session:
-            # Check for token reuse in superseded tokens
-            reused_session = await db.auth_sessions.find_one({"replacedBySessionOrTokenId": token_hash})
+            # Check for token reuse in superseded/historical rotated tokens
+            reused_session = await db.auth_sessions.find_one({
+                "$or": [
+                    {"replacedBySessionOrTokenId": token_hash},
+                    {"previousRefreshTokenHashes": token_hash},
+                ]
+            })
             if reused_session:
                 customer_id = reused_session.get("customerId")
                 logger.warning(
@@ -108,7 +134,9 @@ class TokenService:
             customer_query = {"_id": customer_id_str}
 
         customer = await db.customers.find_one(customer_query)
-        if not customer or customer.get("status") != "active":
+        if not customer:
+            raise UnauthorizedException("Customer account not found.", code="CUSTOMER_NOT_FOUND")
+        if customer.get("status") != "active":
             raise UnauthorizedException("Customer account is blocked or inactive.", code="ACCOUNT_INACTIVE")
 
         # 5. Atomically rotate the refresh token
@@ -128,7 +156,10 @@ class TokenService:
                     "lastUsedAt": now,
                     "expiresAt": new_refresh_expires_at,
                     "replacedBySessionOrTokenId": token_hash,
-                }
+                },
+                "$push": {
+                    "previousRefreshTokenHashes": token_hash,
+                },
             },
             return_document=ReturnDocument.AFTER,
         )

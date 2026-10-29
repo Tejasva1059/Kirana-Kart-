@@ -402,3 +402,20 @@ async def seed_default_catalogue_if_needed() -> None:
             },
         ])
         logger.info("Successfully seeded Pulses, Tuar Dal, Chana Dal and variants.")
+
+    # Seed default customer for local testing if needed
+    from app.core.config import settings
+    if settings.APP_ENV != "testing":
+        cust = await db.customers.find_one({"mobileNumberNormalized": "9876543210"})
+        if not cust:
+            await db.customers.insert_one({
+                "_id": ObjectId("67138012e354b011d88a0999"),
+                "fullName": "Kirana Test Customer",
+                "mobileNumberNormalized": "9876543210",
+                "emailNormalized": "testcustomer@kiranakart.com",
+                "role": "customer",
+                "status": "active",
+                "createdAt": now,
+                "updatedAt": now,
+            })
+            logger.info("Seeded default test customer with mobile 9876543210.")

@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Any, Dict, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.schemas.customer import CustomerPublicProfile
 
@@ -109,9 +109,24 @@ class CustomerLoginRequest(BaseModel):
 
 
 class TokenRefreshRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "refreshToken": "paste-refresh-token-here"
+            }
+        },
+    )
 
     refreshToken: str = Field(..., description="Opaque refresh token")
+
+    @field_validator("refreshToken")
+    @classmethod
+    def validate_refresh_token(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Refresh token cannot be empty.")
+        return v
 
 
 class LogoutRequest(BaseModel):
@@ -121,11 +136,25 @@ class LogoutRequest(BaseModel):
 
 
 class TokenData(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     accessToken: str
     tokenType: str = "Bearer"
     expiresIn: int
     refreshToken: str
     refreshExpiresIn: int
+    tokens: Optional[Dict[str, Any]] = None
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        if self.tokens is None:
+            self.tokens = {
+                "accessToken": self.accessToken,
+                "tokenType": self.tokenType,
+                "expiresIn": self.expiresIn,
+                "refreshToken": self.refreshToken,
+                "refreshExpiresIn": self.refreshExpiresIn,
+            }
 
 
 class AuthResponseData(BaseModel):

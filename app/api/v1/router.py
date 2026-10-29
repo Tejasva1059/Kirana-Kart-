@@ -3,6 +3,7 @@ from app.api.v1.endpoints import (
     addresses,
     auth,
     banners,
+    cart,
     categories,
     customers,
     locations,
@@ -10,6 +11,7 @@ from app.api.v1.endpoints import (
     search,
     serviceability,
     shops,
+    wishlist,
 )
 
 api_v1_router = APIRouter()
@@ -24,3 +26,5 @@ api_v1_router.include_router(categories.router)
 api_v1_router.include_router(products.router)
 api_v1_router.include_router(search.router)
 api_v1_router.include_router(shops.router)
+api_v1_router.include_router(cart.router)
+api_v1_router.include_router(wishlist.router)
